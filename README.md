@@ -115,7 +115,4 @@ Run the complete unit, integration, and concurrency test suite:
 
 ---
 
-## 📂 Project Architecture Artifacts
 
-- **[ARCHITECTURE.md](file:///c:/Users/lijil/OneDrive/Documents/alumini/ARCHITECTURE.md)**: Contains detailed Mermaid Class Diagrams, Sequence Diagrams (Matching, Concurrency Locking, Session Lifecycle), N-Tier Layered Architecture, and the Database Schema Data Dictionary.
-- **[DEMO_GUIDE.md](file:///c:/Users/lijil/OneDrive/Documents/alumini/DEMO_GUIDE.md)**: Contains the 5-minute examination presentation script, live demo walkthrough sequence, key code snippets to explain, and Top 10 Viva Voce Q&A with model answers.
