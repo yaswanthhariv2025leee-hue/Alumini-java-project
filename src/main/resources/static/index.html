@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MentorConnect — Alumni-Student Mentorship Matching Platform</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+</head>
+<body>
+
+  <!-- Header & Navbar -->
+  <header>
+    <div class="navbar">
+      <a href="#" class="brand" onclick="switchTab('dashboard')">
+        <div class="brand-icon">🎓</div>
+        <div>
+          <span>MentorConnect</span>
+          <span class="brand-badge">Spring Boot + MySQL</span>
+        </div>
+      </a>
+      <nav class="nav-tabs">
+        <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">
+          <span>📊</span> Dashboard
+        </button>
+        <button class="tab-btn" data-tab="matcher" onclick="switchTab('matcher')">
+          <span>🎯</span> Auto-Suggest & Match
+        </button>
+        <button class="tab-btn" data-tab="alumni" onclick="switchTab('alumni')">
+          <span>👨‍💼</span> Alumni Mentors
+        </button>
+        <button class="tab-btn" data-tab="students" onclick="switchTab('students')">
+          <span>👩‍🎓</span> Students
+        </button>
+        <button class="tab-btn" data-tab="pairs" onclick="switchTab('pairs')">
+          <span>🤝</span> Mentorship Pairs
+        </button>
+        <button class="tab-btn" data-tab="sessions" onclick="switchTab('sessions')">
+          <span>📅</span> Sessions
+        </button>
+        <button class="tab-btn" data-tab="reports" onclick="switchTab('reports')">
+          <span>📈</span> Engagement Report
+        </button>
+        <button class="tab-btn" data-tab="audit" onclick="switchTab('audit')">
+          <span>📜</span> Audit Logs
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main>
+
+    <!-- TAB 1: DASHBOARD -->
+    <section id="tab-dashboard" class="tab-content active">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">Department Mentorship Overview</h1>
+          <p class="section-desc">Real-time matching metrics, alumni availability, and session tracking engagement.</p>
+        </div>
+        <div class="section-actions">
+          <button class="btn btn-primary" onclick="openRegisterAlumniModal()">+ Register Alumni</button>
+          <button class="btn btn-secondary" onclick="openRegisterStudentModal()">+ Register Student</button>
+          <button class="btn btn-success" onclick="switchTab('matcher')">🎯 Match Student</button>
+        </div>
+      </div>
+
+      <!-- KPI Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue">👨‍💼</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-alumni">0</div>
+            <div class="stat-label">Registered Alumni</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon indigo">👩‍🎓</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-students">0</div>
+            <div class="stat-label">Active Students</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">🤝</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-active-pairs">0</div>
+            <div class="stat-label">Active Mentorships</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon amber">📅</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-sessions">0</div>
+            <div class="stat-label">Sessions Held (Completed)</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple">⏱️</div>
+          <div class="stat-info">
+            <div class="stat-value" id="stat-hours">0.0</div>
+            <div class="stat-label">Mentoring Hours</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Match & Activity Sections -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem;">
+        <div class="table-container" style="padding: 1.25rem;">
+          <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem;">⚡ Quick Auto-Suggest</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Select a student to immediately calculate tag overlap and find best available mentors.
+          </p>
+          <div class="form-group">
+            <label class="form-label">Select Student</label>
+            <select id="quick-student-select" class="form-control" onchange="runQuickMatch()">
+              <option value="">-- Choose Student --</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" style="width: 100%;" onclick="runQuickMatch()">Find Best Matching Mentors</button>
+        </div>
+
+        <div class="table-container" style="padding: 1.25rem;">
+          <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem;">🛡️ Business Rules Enforced</h3>
+          <ul style="font-size: 0.875rem; color: var(--text-muted); padding-left: 1.25rem; line-height: 1.7;">
+            <li><strong>Capacity Limit:</strong> Mentors cannot be matched beyond their declared maximum concurrent mentee limit.</li>
+            <li><strong>Strict Service Validation:</strong> Rejected immediately with clear error response if capacity is exceeded.</li>
+            <li><strong>Overlap Ranking:</strong> Match suggestions ranked by number of overlapping interest tags, highest first.</li>
+            <li><strong>Active Session Scheduling:</strong> Sessions can only be scheduled for ACTIVE mentorship pairs.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: AUTO-SUGGEST & MATCH -->
+    <section id="tab-matcher" class="tab-content">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">🎯 Smart Mentor Matching</h1>
+          <p class="section-desc">Auto-suggest ranked alumni mentors based on overlapping interest tags and real-time available capacity.</p>
+        </div>
+        <div class="section-actions">
+          <div style="display: flex; gap: 0.5rem;">
+            <button id="btn-mode-student" class="btn btn-primary btn-sm" onclick="setMatcherMode('student')">👨‍🎓 By Student Profile</button>
+            <button id="btn-mode-tags" class="btn btn-secondary btn-sm" onclick="setMatcherMode('tags')">🏷️ By Custom Tags</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode 1: Student Select -->
+      <div id="matcher-student-mode" class="filter-bar">
+        <div style="flex: 1; min-width: 250px;">
+          <label class="form-label" style="margin-bottom: 0.2rem;">Select Student to Match</label>
+          <select id="matcher-student-select" class="form-control" onchange="loadStudentSuggestions()">
+            <option value="">-- Select Student --</option>
+          </select>
+        </div>
+        <div style="align-self: flex-end;">
+          <button class="btn btn-primary" onclick="loadStudentSuggestions()">🔍 Calculate Match Ranking</button>
+        </div>
+      </div>
+
+      <!-- Mode 2: Custom Tags Search -->
+      <div id="matcher-tags-mode" class="filter-bar" style="display: none; flex-direction: column; align-items: stretch; gap: 0.75rem;">
+        <div>
+          <label class="form-label" style="margin-bottom: 0.3rem;">Select Target Learning Tags</label>
+          <div id="matcher-custom-tags-container" class="tag-selector-container">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem;">
+          <span class="form-hint">Click tags above to specify interest areas</span>
+          <button class="btn btn-primary" onclick="loadCustomTagSuggestions()">🔍 Find Matching Mentors</button>
+        </div>
+      </div>
+
+      <div id="selected-student-info" style="display:none; background: #e0e7ff; padding: 0.85rem 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <strong id="match-student-name" style="font-size: 1.05rem;">Student Name</strong>
+            <span id="match-student-dept" style="color: #4338ca; font-size: 0.85rem; margin-left: 0.5rem;">CSE 2026</span>
+          </div>
+          <div id="match-student-tags" class="tag-list" style="margin: 0;"></div>
+        </div>
+      </div>
+
+      <!-- Suggestions Container -->
+      <div id="matcher-results" class="cards-grid">
+        <div class="empty-state" style="grid-column: 1 / -1;">
+          <div class="empty-icon">🎯</div>
+          <div class="empty-title">Select a student or tags above</div>
+          <div class="empty-desc">The matching algorithm will analyze interest tags and rank available alumni mentors.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: ALUMNI DIRECTORY -->
+    <section id="tab-alumni" class="tab-content">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">👨‍💼 Alumni Mentor Directory</h1>
+          <p class="section-desc">Browse registered alumni mentors, their expertise domains, and available mentoring slots.</p>
+        </div>
+        <div class="section-actions">
+          <button class="btn btn-primary" onclick="openRegisterAlumniModal()">+ Register Alumni</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <input type="text" id="alumni-search" class="search-input" placeholder="Search by name, company, or job title..." oninput="filterAlumni()">
+        <select id="alumni-tag-filter" class="select-filter" onchange="filterAlumni()">
+          <option value="">All Expertise Tags</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="fetchAlumni()">🔄 Refresh</button>
+      </div>
+
+      <div id="alumni-grid" class="cards-grid">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- TAB 4: STUDENTS DIRECTORY -->
+    <section id="tab-students" class="tab-content">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">👩‍🎓 Student Directory</h1>
+          <p class="section-desc">View registered students, their learning interest tags, and current mentorship engagement.</p>
+        </div>
+        <div class="section-actions">
+          <button class="btn btn-primary" onclick="openRegisterStudentModal()">+ Register Student</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <input type="text" id="student-search" class="search-input" placeholder="Search by name, department, roll number..." oninput="filterStudents()">
+        <button class="btn btn-secondary btn-sm" onclick="fetchStudents()">🔄 Refresh</button>
+      </div>
+
+      <div id="student-grid" class="cards-grid">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- TAB 5: MENTORSHIP PAIRS -->
+    <section id="tab-pairs" class="tab-content">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">🤝 Mentorship Pairs</h1>
+          <p class="section-desc">Monitor active, completed, and cancelled mentorship pairings across departments.</p>
+        </div>
+        <div class="section-actions">
+          <button class="btn btn-primary" onclick="switchTab('matcher')">+ New Mentorship Match</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <select id="pair-status-filter" class="select-filter" onchange="fetchPairs()">
+          <option value="">All Statuses</option>
+          <option value="ACTIVE" selected>ACTIVE Only</option>
+          <option value="COMPLETED">COMPLETED</option>
+          <option value="CANCELLED">CANCELLED</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="fetchPairs()">🔄 Refresh</button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Alumni Mentor</th>
+              <th>Student Mentee</th>
+              <th>Status</th>
+              <th>Start Date</th>
+              <th>Sessions</th>
+              <th>Notes</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="pairs-table-body">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 6: SESSIONS TRACKER -->
+    <section id="tab-sessions" class="tab-content">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">📅 Mentoring Sessions Tracker</h1>
+          <p class="section-desc">Track scheduled 1-on-1 mentorship calls, meeting links, and completion feedback notes.</p>
+        </div>
+        <div class="section-actions">
+          <button class="btn btn-primary" onclick="openScheduleSessionModal()">+ Schedule Session</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <select id="session-status-filter" class="select-filter" onchange="fetchSessions()">
+          <option value="">All Session Statuses</option>
+          <option value="SCHEDULED">SCHEDULED</option>
+          <option value="COMPLETED">COMPLETED</option>
+          <option value="CANCELLED">CANCELLED</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="fetchSessions()">🔄 Refresh</button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Pair (Mentor & Mentee)</th>
+              <th>Date & Time</th>
+              <th>Duration</th>
+              <th>Topic</th>
+              <th>Status</th>
+              <th>Meeting Link / Feedback</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="sessions-table-body">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 7: ENGAGEMENT REPORT -->
+    <section id="tab-reports" class="tab-content">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">📈 Mentorship Engagement Report</h1>
+          <p class="section-desc">Core Feature 5: Sessions held per mentor pair, completion ratios, and total engagement hours.</p>
+        </div>
+        <div class="section-actions">
+          <button class="btn btn-secondary" onclick="fetchEngagementReport()">🔄 Refresh Data</button>
+          <button class="btn btn-primary" onclick="window.print()">🖨️ Print Report</button>
+        </div>
+      </div>
+
+      <!-- Report Summary Grid -->
+      <div class="stats-grid" id="report-summary-cards">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="table-container" style="margin-top: 1.5rem;">
+        <table>
+          <thead>
+            <tr>
+              <th>Pair ID</th>
+              <th>Alumni Mentor</th>
+              <th>Student Mentee</th>
+              <th>Status</th>
+              <th>Timeline</th>
+              <th>Total Scheduled</th>
+              <th>Completed Sessions</th>
+              <th>Cancelled Sessions</th>
+              <th>Total Hours Held</th>
+            </tr>
+          </thead>
+          <tbody id="report-table-body">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 8: AUDIT LOGS -->
+    <section id="tab-audit" class="tab-content">
+      <div class="section-header">
+        <div>
+          <h1 class="section-title">📜 System Activity & Audit Logs</h1>
+          <p class="section-desc">Specification Requirement: Immutable audit tracking for registrations, matching pairs, and session lifecycle transitions.</p>
+        </div>
+        <div class="section-actions">
+          <button class="btn btn-secondary" onclick="fetchAuditLogs()">🔄 Refresh Logs</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <input type="text" id="audit-search" class="search-input" placeholder="Search by action, details, entity..." oninput="filterAuditLogs()">
+        <select id="audit-action-filter" class="select-filter" onchange="filterAuditLogs()">
+          <option value="">All Actions</option>
+          <option value="ALUMNI_REGISTERED">ALUMNI_REGISTERED</option>
+          <option value="STUDENT_REGISTERED">STUDENT_REGISTERED</option>
+          <option value="PAIR_CREATED">PAIR_CREATED</option>
+          <option value="PAIR_STATUS_CHANGED">PAIR_STATUS_CHANGED</option>
+          <option value="SESSION_SCHEDULED">SESSION_SCHEDULED</option>
+          <option value="SESSION_COMPLETED">SESSION_COMPLETED</option>
+          <option value="SESSION_CANCELLED">SESSION_CANCELLED</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="fetchAuditLogs()">🔄 Refresh</button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Action</th>
+              <th>Entity</th>
+              <th>Entity ID</th>
+              <th>Timestamp</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="audit-table-body">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: REGISTER ALUMNI -->
+  <div id="modal-register-alumni" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">👨‍💼 Register Alumni Mentor</h3>
+        <button class="modal-close" onclick="closeModal('modal-register-alumni')">&times;</button>
+      </div>
+      <form id="form-register-alumni" onsubmit="handleRegisterAlumni(event)">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Full Name *</label>
+              <input type="text" id="alumni-name" class="form-control" required placeholder="e.g. Priya Sharma">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address *</label>
+              <input type="email" id="alumni-email" class="form-control" required placeholder="priya@company.com">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Current Company *</label>
+              <input type="text" id="alumni-company" class="form-control" required placeholder="e.g. Google">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Job Title *</label>
+              <input type="text" id="alumni-job-title" class="form-control" required placeholder="e.g. Senior Software Engineer">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Graduation Year *</label>
+              <input type="number" id="alumni-grad-year" class="form-control" required min="1950" max="2030" value="2018">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Max Concurrent Mentees *</label>
+              <input type="number" id="alumni-max-slots" class="form-control" required min="1" max="10" value="2">
+              <span class="form-hint">Enforced capacity limit for active mentorships</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bio / Expertise Focus</label>
+            <textarea id="alumni-bio" class="form-control" rows="2" placeholder="Brief summary of mentorship areas..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Select Expertise Tags *</label>
+            <div id="alumni-tag-selector" class="tag-selector-container">
+              <!-- Rendered dynamically -->
+            </div>
+            <span class="form-hint">Click tags to select or deselect</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-register-alumni')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Register Mentor</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTER STUDENT -->
+  <div id="modal-register-student" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">👩‍🎓 Register Student</h3>
+        <button class="modal-close" onclick="closeModal('modal-register-student')">&times;</button>
+      </div>
+      <form id="form-register-student" onsubmit="handleRegisterStudent(event)">
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Full Name *</label>
+              <input type="text" id="student-name" class="form-control" required placeholder="e.g. Rahul Verma">
+            </div>
+            <div class="form-group">
+              <label class="form-label">College Email *</label>
+              <input type="email" id="student-email" class="form-control" required placeholder="rahul@college.edu">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Department *</label>
+              <input type="text" id="student-dept" class="form-control" required placeholder="e.g. Computer Science">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Batch Year *</label>
+              <input type="number" id="student-batch" class="form-control" required min="2020" max="2035" value="2026">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Roll Number</label>
+            <input type="text" id="student-roll" class="form-control" placeholder="e.g. 22CS045">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Select Learning Interest Tags *</label>
+            <div id="student-tag-selector" class="tag-selector-container">
+              <!-- Rendered dynamically -->
+            </div>
+            <span class="form-hint">Mentors will be ranked by overlap with these tags</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-register-student')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Register Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: SCHEDULE SESSION -->
+  <div id="modal-schedule-session" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">📅 Schedule Mentoring Session</h3>
+        <button class="modal-close" onclick="closeModal('modal-schedule-session')">&times;</button>
+      </div>
+      <form id="form-schedule-session" onsubmit="handleScheduleSession(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Mentorship Pair *</label>
+            <select id="session-pair-select" class="form-control" required>
+              <option value="">-- Select Active Pair --</option>
+            </select>
+            <span class="form-hint">Rule: Sessions can only be scheduled for ACTIVE pairs.</span>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Date & Time *</label>
+              <input type="datetime-local" id="session-date" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Duration (Minutes) *</label>
+              <input type="number" id="session-duration" class="form-control" required min="15" max="300" value="60">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Session Topic *</label>
+            <input type="text" id="session-topic" class="form-control" required placeholder="e.g. System Design Mock Interview: TinyURL">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Meeting URL</label>
+            <input type="url" id="session-meeting-link" class="form-control" placeholder="https://meet.google.com/xyz-abc-def">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-schedule-session')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Schedule Session</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: COMPLETE SESSION & FEEDBACK -->
+  <div id="modal-complete-session" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">✅ Complete Session & Record Feedback</h3>
+        <button class="modal-close" onclick="closeModal('modal-complete-session')">&times;</button>
+      </div>
+      <form id="form-complete-session" onsubmit="handleCompleteSession(event)">
+        <input type="hidden" id="complete-session-id">
+        <div class="modal-body">
+          <p id="complete-session-info" style="font-size: 0.9rem; margin-bottom: 1rem; color: var(--text-muted);"></p>
+          <div class="form-group">
+            <label class="form-label">Feedback & Discussion Notes *</label>
+            <textarea id="complete-session-notes" class="form-control" rows="4" required placeholder="Summary of topics discussed, student progress, key advice given, assignments..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-complete-session')">Cancel</button>
+          <button type="submit" class="btn btn-success">Mark Completed</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- Footer -->
+  <footer>
+    MentorConnect &copy; 2026 — Sri Eshwar College of Engineering &bull; Spring Boot MVC + MySQL JDBC Connectivity
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
